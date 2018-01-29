@@ -32,13 +32,22 @@ library(ggplot2)
 ```{r}
 
 cities_income <- individual %>%
-          filter(URBAN2011 == "(1) urban 1", WS10 < 80000) %>%
-          select(RO7, WS3NM, WS4, WS5, WS10, WS10ANNUAL)
+          filter(URBAN2011 == "(1) urban 1", !(RO7 %in% c("(11) Housework 11", "(10) Retired 10", "(12) Student 12")))  %>%
+          select(RO7, RO3, RO4, RO5, WS3NM, WS4, WS5, WS10, WS10ANNUAL) %>%
+          mutate(sector_rough = ifelse(
+         RO7 %in% c("(07) Organized Business 7", "(08) Salaried 8"), "formal", "other"))
+
+cities_outlier <- cities_income %>%
+                  filter(sector_rough == "other") %>%
+                  arrange(desc(WS10ANNUAL)) %>%
+                  slice(1:10)
+
          
+nrow(cities_income)
 
-
-ggplot(cities_income, aes(x = RO7, y = WS10ANNUAL))+
-      geom_boxplot()+
+ggplot(cities_income, aes(x = WS10ANNUAL, group = sector_rough, color = sector_rough))+
+      geom_density()+
+      #facet_wrap(~RO3)+
       theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 
